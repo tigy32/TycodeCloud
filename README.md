@@ -31,6 +31,11 @@ Records or updates session statistics for Tycode usage tracking.
     "Read": 5,
     "Write": 3,
     "Bash": 2
+  },
+  "tool_success_fail": {
+    "Read": {"success": 5, "failed": 0},
+    "Write": {"success": 2, "failed": 1},
+    "Bash": {"success": 2, "failed": 0}
   }
 }
 ```
@@ -159,7 +164,8 @@ curl -X POST ${API_ENDPOINT}/statistics \
     "waiting_for_human_ms": 30000,
     "ai_processing_ms": 2000,
     "tool_execution_ms": 1000,
-    "tool_calls": {"Read": 3, "Write": 1}
+    "tool_calls": {"Read": 3, "Write": 1},
+    "tool_success_fail": {"Read": {"success": 3, "failed": 0}, "Write": {"success": 1, "failed": 0}}
   }'
 
 # Test bugs endpoint

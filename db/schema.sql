@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS session_statistics (
     ai_processing_ms BIGINT NOT NULL DEFAULT 0,
     tool_execution_ms BIGINT NOT NULL DEFAULT 0,
     tool_calls_json TEXT NOT NULL, -- JSON serialized as string
+    tool_success_fail_json TEXT NOT NULL, -- JSON serialized as string: {"ToolName": {"success": N, "failed": M}}
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

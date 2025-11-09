@@ -15,6 +15,7 @@ pub struct SessionStatistics {
     pub ai_processing_ms: i64,
     pub tool_execution_ms: i64,
     pub tool_calls_json: String, // JSON string of tool call counts
+    pub tool_success_fail_json: String, // JSON string of tool success/fail rates
 }
 
 /// Bug report model
@@ -55,8 +56,8 @@ pub async fn upsert_statistics(client: &Client, stats: &SessionStatistics) -> Re
     let query = r#"
         INSERT INTO session_statistics (
             session_id, provider, model, input_tokens, output_tokens,
-            waiting_for_human_ms, ai_processing_ms, tool_execution_ms, tool_calls_json
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            waiting_for_human_ms, ai_processing_ms, tool_execution_ms, tool_calls_json, tool_success_fail_json
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         ON CONFLICT (session_id)
         DO UPDATE SET
             provider = EXCLUDED.provider,
@@ -67,6 +68,7 @@ pub async fn upsert_statistics(client: &Client, stats: &SessionStatistics) -> Re
             ai_processing_ms = EXCLUDED.ai_processing_ms,
             tool_execution_ms = EXCLUDED.tool_execution_ms,
             tool_calls_json = EXCLUDED.tool_calls_json,
+            tool_success_fail_json = EXCLUDED.tool_success_fail_json,
             updated_at = CURRENT_TIMESTAMP
     "#;
 
@@ -83,6 +85,7 @@ pub async fn upsert_statistics(client: &Client, stats: &SessionStatistics) -> Re
                 &stats.ai_processing_ms,
                 &stats.tool_execution_ms,
                 &stats.tool_calls_json,
+                &stats.tool_success_fail_json,
             ],
         )
         .await

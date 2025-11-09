@@ -5,6 +5,12 @@ use std::collections::HashMap;
 use tracing::info;
 
 #[derive(Debug, Deserialize)]
+struct ToolSuccessFail {
+    success: i64,
+    failed: i64,
+}
+
+#[derive(Debug, Deserialize)]
 struct StatisticsRequest {
     session_id: String,
     provider: String,
@@ -15,6 +21,7 @@ struct StatisticsRequest {
     ai_processing_ms: i64,
     tool_execution_ms: i64,
     tool_calls: HashMap<String, i64>, // Tool name -> count
+    tool_success_fail: HashMap<String, ToolSuccessFail>, // Tool name -> success/fail counts
 }
 
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
@@ -34,6 +41,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
 
     // Convert tool calls to JSON string
     let tool_calls_json = serde_json::to_string(&req.tool_calls)?;
+    let tool_success_fail_json = serde_json::to_string(&req.tool_success_fail)?;
 
     let stats = SessionStatistics {
         session_id: req.session_id.clone(),
@@ -45,6 +53,7 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
         ai_processing_ms: req.ai_processing_ms,
         tool_execution_ms: req.tool_execution_ms,
         tool_calls_json,
+        tool_success_fail_json,
     };
 
     // Connect to database and upsert statistics

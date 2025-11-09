@@ -20,6 +20,7 @@ Stores usage statistics for Tycode sessions. Updated via upsert (idempotent by s
 - `ai_processing_ms` (BIGINT) - AI processing time (milliseconds)
 - `tool_execution_ms` (BIGINT) - Tool execution time (milliseconds)
 - `tool_calls_json` (TEXT) - JSON string of tool call counts by name
+- `tool_success_fail_json` (TEXT) - JSON string of tool success/fail rates by name (e.g., `{"Read": {"success": 5, "failed": 1}}`)
 - `created_at` (TIMESTAMP) - Record creation timestamp
 - `updated_at` (TIMESTAMP) - Last update timestamp
 
