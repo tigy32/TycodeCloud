@@ -30,11 +30,8 @@ variable "project_name" {
 data "aws_caller_identity" "current" {}
 
 # Aurora DSQL Cluster
-resource "aws_rds_cluster" "tycode_db" {
-  cluster_identifier  = "${var.project_name}-cluster"
-  engine              = "aurora-dsql"
-  database_name       = "tycode"
-  skip_final_snapshot = true
+resource "aws_dsql_cluster" "tycode_db" {
+  deletion_protection_enabled = false
 
   tags = {
     Name        = "${var.project_name}-cluster"
@@ -118,7 +115,7 @@ resource "aws_iam_role_policy" "lambda_dsql" {
           "dsql:DbConnect",
           "dsql:DbConnectAdmin"
         ]
-        Resource = aws_rds_cluster.tycode_db.arn
+        Resource = aws_dsql_cluster.tycode_db.arn
       }
     ]
   })
@@ -138,7 +135,7 @@ resource "aws_lambda_function" "statistics" {
 
   environment {
     variables = {
-      DB_HOST    = aws_rds_cluster.tycode_db.endpoint
+      DB_HOST    = aws_dsql_cluster.tycode_db.endpoint
       DB_NAME    = "tycode"
       AWS_REGION = var.aws_region
       RUST_LOG   = "info"
@@ -169,7 +166,7 @@ resource "aws_lambda_function" "bugs" {
 
   environment {
     variables = {
-      DB_HOST    = aws_rds_cluster.tycode_db.endpoint
+      DB_HOST    = aws_dsql_cluster.tycode_db.endpoint
       DB_NAME    = "tycode"
       AWS_REGION = var.aws_region
       RUST_LOG   = "info"
@@ -282,6 +279,6 @@ output "bugs_url" {
 
 output "database_endpoint" {
   description = "Aurora DSQL cluster endpoint"
-  value       = aws_rds_cluster.tycode_db.endpoint
+  value       = aws_dsql_cluster.tycode_db.endpoint
   sensitive   = true
 }
