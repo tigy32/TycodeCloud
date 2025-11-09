@@ -1,10 +1,10 @@
 use lambda_http::{run, service_fn, Body, Error, Request, Response};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use shared::{get_db_client, upsert_statistics, SessionStatistics};
 use std::collections::HashMap;
 use tracing::info;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct ToolSuccessFail {
     success: i64,
     failed: i64,
@@ -72,7 +72,8 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     Ok(Response::builder()
         .status(200)
         .header("content-type", "application/json")
-        .body(Body::Text(serde_json::to_string(&response)?))?`)
+        .body(Body::Text(serde_json::to_string(&response)?))?)
+
 }
 
 #[tokio::main]

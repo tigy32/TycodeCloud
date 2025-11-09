@@ -4,6 +4,7 @@ members = [
     "lambdas/bugs",
     "shared",
 ]
+exclude = ["client"]
 resolver = "2"
 
 [workspace.dependencies]

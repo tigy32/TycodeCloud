@@ -46,7 +46,8 @@ async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     Ok(Response::builder()
         .status(201)
         .header("content-type", "application/json")
-        .body(Body::Text(serde_json::to_string(&response)?))?`)
+        .body(Body::Text(serde_json::to_string(&response)?))?)
+
 }
 
 #[tokio::main]
