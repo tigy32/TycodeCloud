@@ -1,4 +1,6 @@
 use anyhow::{Context, Result};
+use aws_config::BehaviorVersion;
+use aws_sdk_dsql::auth_token::{AuthTokenGenerator, Config};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::{Client, NoTls};
 use uuid::Uuid;
@@ -25,16 +27,39 @@ pub struct BugReport {
     pub description: String,
 }
 
+/// Generate DSQL authentication token
+async fn generate_dsql_token(hostname: &str, region: &str) -> Result<String> {
+    let sdk_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+
+    let config = Config::builder()
+        .hostname(hostname)
+        .region(aws_config::Region::new(region.to_string()))
+        .build()
+        .map_err(|e| anyhow::anyhow!("Failed to build DSQL auth config: {}", e))?;
+
+    let signer = AuthTokenGenerator::new(config);
+
+    // Use admin auth token for database connection
+    let token = signer
+        .db_connect_admin_auth_token(&sdk_config)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to generate DSQL auth token: {}", e))?;
+
+    Ok(token.to_string())
+}
+
 /// Database connection helper
 pub async fn get_db_client() -> Result<Client> {
     let db_host = std::env::var("DB_HOST").context("DB_HOST not set")?;
     let db_name = std::env::var("DB_NAME").context("DB_NAME not set")?;
-    let db_user = std::env::var("DB_USER").context("DB_USER not set")?;
-    let db_password = std::env::var("DB_PASSWORD").context("DB_PASSWORD not set")?;
+    let region = std::env::var("AWS_REGION").context("AWS_REGION not set")?;
+
+    // Generate DSQL auth token
+    let token = generate_dsql_token(&db_host, &region).await?;
 
     let connection_string = format!(
-        "host={} dbname={} user={} password={} sslmode=require",
-        db_host, db_name, db_user, db_password
+        "host={} dbname={} user=admin password={} sslmode=require",
+        db_host, db_name, token
     );
 
     let (client, connection) = tokio_postgres::connect(&connection_string, NoTls)

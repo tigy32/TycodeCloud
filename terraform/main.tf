@@ -26,30 +26,15 @@ variable "project_name" {
   default     = "tycode-api"
 }
 
-variable "db_admin_username" {
-  description = "Database admin username"
-  type        = string
-  default     = "admin"
-  sensitive   = true
-}
-
-variable "db_admin_password" {
-  description = "Database admin password"
-  type        = string
-  sensitive   = true
-}
-
 # Data sources
 data "aws_caller_identity" "current" {}
 
 # Aurora DSQL Cluster
 resource "aws_rds_cluster" "tycode_db" {
-  cluster_identifier     = "${var.project_name}-cluster"
-  engine                 = "aurora-dsql"
-  master_username        = var.db_admin_username
-  master_password        = var.db_admin_password
-  database_name          = "tycode"
-  skip_final_snapshot    = true
+  cluster_identifier  = "${var.project_name}-cluster"
+  engine              = "aurora-dsql"
+  database_name       = "tycode"
+  skip_final_snapshot = true
 
   tags = {
     Name        = "${var.project_name}-cluster"
@@ -119,6 +104,26 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
+# IAM policy for DSQL token generation
+resource "aws_iam_role_policy" "lambda_dsql" {
+  name = "${var.project_name}-lambda-dsql-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dsql:DbConnect",
+          "dsql:DbConnectAdmin"
+        ]
+        Resource = aws_rds_cluster.tycode_db.arn
+      }
+    ]
+  })
+}
+
 # Lambda function for statistics
 resource "aws_lambda_function" "statistics" {
   filename         = "${path.module}/../target/lambda/statistics/bootstrap.zip"
@@ -133,11 +138,10 @@ resource "aws_lambda_function" "statistics" {
 
   environment {
     variables = {
-      DB_HOST     = aws_rds_cluster.tycode_db.endpoint
-      DB_NAME     = "tycode"
-      DB_USER     = var.db_admin_username
-      DB_PASSWORD = var.db_admin_password
-      RUST_LOG    = "info"
+      DB_HOST    = aws_rds_cluster.tycode_db.endpoint
+      DB_NAME    = "tycode"
+      AWS_REGION = var.aws_region
+      RUST_LOG   = "info"
     }
   }
 
@@ -165,11 +169,10 @@ resource "aws_lambda_function" "bugs" {
 
   environment {
     variables = {
-      DB_HOST     = aws_rds_cluster.tycode_db.endpoint
-      DB_NAME     = "tycode"
-      DB_USER     = var.db_admin_username
-      DB_PASSWORD = var.db_admin_password
-      RUST_LOG    = "info"
+      DB_HOST    = aws_rds_cluster.tycode_db.endpoint
+      DB_NAME    = "tycode"
+      AWS_REGION = var.aws_region
+      RUST_LOG   = "info"
     }
   }
 

@@ -106,18 +106,16 @@ This creates deployment packages at:
 - `target/lambda/statistics/bootstrap.zip`
 - `target/lambda/bugs/bootstrap.zip`
 
-### 3. Configure Terraform Variables
+### 3. Configure Terraform Variables (Optional)
 
-Create `terraform/terraform.tfvars`:
+The deployment uses default values, but you can customize by creating `terraform/terraform.tfvars`:
 
 ```hcl
-aws_region         = "us-west-2"
-project_name       = "tycode-api"
-db_admin_username  = "admin"
-db_admin_password  = "YourSecurePassword123!"  # Change this!
+aws_region   = "us-west-2"  # Default region
+project_name = "tycode-api" # Default project name
 ```
 
-**Important**: Never commit `terraform.tfvars` to version control!
+**Note**: Aurora DSQL uses IAM authentication (no passwords needed!)
 
 ### 4. Deploy Infrastructure
 
@@ -255,11 +253,23 @@ This setup is designed for minimal cost:
 
 ## Security Notes
 
-- Database credentials are stored in Lambda environment variables
-- API is publicly accessible (no authentication)
-- CORS is configured for cross-origin requests
-- Lambda functions run in VPC for database access
-- All data transmitted over HTTPS
+- **Aurora DSQL Authentication**: Uses IAM-based authentication with auto-generated tokens (no passwords!)
+- **Lambda Permissions**: IAM role allows `dsql:DbConnectAdmin` for token generation
+- **API Access**: Publicly accessible (no authentication)
+- **CORS**: Configured for cross-origin requests
+- **Network**: Lambda functions run in VPC for database access
+- **Transport**: All data transmitted over HTTPS
+
+### How DSQL Authentication Works
+
+The Lambda functions automatically generate short-lived authentication tokens using AWS IAM:
+
+1. Lambda assumes IAM role with `dsql:DbConnectAdmin` permission
+2. Rust code calls `AuthTokenGenerator.db_connect_admin_auth_token()`
+3. Temporary token (valid ~15 minutes) is used to connect to DSQL
+4. No passwords or long-lived credentials needed!
+
+This is handled automatically by the `shared` library - see `shared/src/lib.rs` for implementation.
 
 ## Monitoring
 
