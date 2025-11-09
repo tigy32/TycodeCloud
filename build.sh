@@ -9,10 +9,6 @@ if ! command -v cargo-lambda &> /dev/null; then
     pip3 install cargo-lambda
 fi
 
-# Create output directory
-mkdir -p target/lambda/statistics
-mkdir -p target/lambda/bugs
-
 # Build statistics Lambda
 echo "Building statistics Lambda..."
 cargo lambda build --release --arm64 --package statistics
@@ -23,14 +19,21 @@ cargo lambda build --release --arm64 --package bugs
 
 # Package Lambda functions
 echo "Packaging Lambda functions..."
-cd target/lambda/release
-zip -j ../statistics/bootstrap.zip bootstrap-statistics
-mv bootstrap-statistics ../statistics/bootstrap
-zip -j ../bugs/bootstrap.zip bootstrap-bugs
-mv bootstrap-bugs ../bugs/bootstrap
+
+# Package statistics
+cd target/lambda/statistics
+zip bootstrap.zip bootstrap
+echo "Created statistics package: $(pwd)/bootstrap.zip"
 cd ../../..
 
+# Package bugs
+cd target/lambda/bugs
+zip bootstrap.zip bootstrap
+echo "Created bugs package: $(pwd)/bootstrap.zip"
+cd ../../..
+
+echo ""
 echo "Build complete!"
-echo "Lambda packages created:"
+echo "Lambda packages ready for deployment:"
 echo "  - target/lambda/statistics/bootstrap.zip"
 echo "  - target/lambda/bugs/bootstrap.zip"
