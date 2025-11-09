@@ -176,6 +176,34 @@ curl -X POST ${API_ENDPOINT}/bugs \
   }'
 ```
 
+## Rust Client Library
+
+A Rust client library is available at `client/` for easy integration:
+
+```toml
+[dependencies]
+tycode-client = { git = "https://github.com/tigy32/TycodeCloud", branch = "main" }
+```
+
+**Usage:**
+
+```rust
+use tycode_client::{TycodeClient, SessionStatisticsBuilder};
+
+let client = TycodeClient::new("https://your-api-endpoint.amazonaws.com");
+
+let stats = SessionStatisticsBuilder::new("session-123", "anthropic", "claude-sonnet-4")
+    .tokens(1500, 800)
+    .timing(45000, 3200, 1800)
+    .add_tool_call("Read", 5)
+    .add_tool_stats("Read", 5, 0)
+    .build();
+
+client.report_statistics(&stats).await?;
+```
+
+See [`client/README.md`](client/README.md) for full documentation.
+
 ## Project Structure
 
 ```
@@ -184,6 +212,7 @@ TycodeCloud/
 │   ├── statistics/     # Statistics recording Lambda
 │   └── bugs/           # Bug reporting Lambda
 ├── shared/             # Shared library (DB models, utils)
+├── client/             # Rust client library for API consumption
 ├── terraform/          # Infrastructure as Code
 ├── db/                 # Database schema and migrations
 ├── build.sh            # Lambda build script

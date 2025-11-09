@@ -1,0 +1,17 @@
+[package]
+name = "tycode-client"
+version = "0.1.0"
+edition = "2021"
+authors = ["tigy32 <26986224+tigy32@users.noreply.github.com>"]
+description = "Rust client library for Tycode Cloud API"
+license = "MIT"
+
+[dependencies]
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+uuid = { version = "1.0", features = ["v4"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
